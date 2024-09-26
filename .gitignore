@@ -1,0 +1,11 @@
+# Ignorar entorno virtual
+midas_env/
+
+# Archivos de Python que no deben subirse
+__pycache__/
+*.pyc
+
+# Ignorar archivos de configuración de editor
+.vscode/
+.idea/
+
