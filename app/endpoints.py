@@ -107,6 +107,23 @@ def make_move():
     return response_message, 200
 
 
+@routes.route('/status', methods=['GET'])
+def get_status():
+    match_id = request.args.get('matchId')
+    match = Match.query.get(match_id)
+
+    if not match:
+        return json.dumps({'error': 'MatchId not found'}), 404
+
+    board_drawing = draw_board(match.board)
+
+    return json.dumps({
+        'board': board_drawing,
+        'current_turn': match.current_turn,
+        'winner': match.winner
+    }), 200
+
+
 @routes.route('/')
 def home():
     return "Welcome to the Tic-Tac-Toe API!"
