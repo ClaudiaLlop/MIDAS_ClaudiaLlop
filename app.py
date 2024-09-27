@@ -1,0 +1,13 @@
+import logging
+from app import create_app, db
+
+app = create_app()
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    with app.app_context():
+        db.create_all()
+    logger.info("Service started")
+    app.run(debug=True)
