@@ -107,4 +107,7 @@ def make_move():
     return response_message, 200
 
 
+@routes.route('/')
+def home():
+    return "Welcome to the Tic-Tac-Toe API!"
 
