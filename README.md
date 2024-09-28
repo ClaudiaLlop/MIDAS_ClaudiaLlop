@@ -35,11 +35,11 @@ This project is a RESTful API for a Tic-Tac-Toe game, built using Flask and SQLA
 
    Start the container and map the ports:
     ```bash
-   docker run -d -p 5000:5000 my-tictactoe-app
+   docker run -d -p 5001:5001 my-tictactoe-app
    ```
 4. **Access the API**
 
-    The API will be accessible at http://localhost:5000. You can use tools like Postman or cURL to interact with the API.
+    The API will be accessible at http://localhost:5001. You can use tools like Postman or cURL to interact with the API.
 
 ## API Endpoints
 
@@ -125,7 +125,7 @@ This project is a RESTful API for a Tic-Tac-Toe game, built using Flask and SQLA
 - Endpoint: ```/status```
 - Method: ```GET```
 - Description: Gets status of the match.
-- Params: ```matchId``` must be sent in the request. ```http://localhost:5000/status?matchId=<match_id>``` 
+- Params: ```matchId``` must be sent in the request. ```http://localhost:5001/status?matchId=<match_id>``` 
 - Response Example:
 ```json
 {
