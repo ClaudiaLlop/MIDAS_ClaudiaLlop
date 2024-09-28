@@ -22,20 +22,23 @@ This project is a RESTful API for a Tic-Tac-Toe game, built using Flask and SQLA
 
 1. **Clone the Repository**
    ```bash
-   git clone <repository-url>
-   cd <repository-name>
+   git clone <https://github.com/ClaudiaLlop/MIDAS_ClaudiaLlop.git>
+   cd <MIDAS_ClaudiaLlop>
    ```
 2. **Build the Docker Image**
+
    In the root directory of the project (where the Dockerfile is located), run:
     ```bash
-    docker build -t my-flask-app .
+    docker build -t my-tictactoe-app .
     ```
 3. **Run the Docker Container**
+
    Start the container and map the ports:
     ```bash
-   docker run -d -p 5000:5000 my-flask-app
+   docker run -d -p 5000:5000 my-tictactoe-app
    ```
 4. **Access the API**
+
     The API will be accessible at http://localhost:5000. You can use tools like Postman or cURL to interact with the API.
 
 ## API Endpoints
@@ -72,7 +75,7 @@ This project is a RESTful API for a Tic-Tac-Toe game, built using Flask and SQLA
 
    **Possible responses:**
 
-   - If the movement is successfull the response must return the following message and state of the board:
+   - If the movement is successfull the response must return the following message and state of the board, e.g.:
    ```json
    Movement successfully registered
    X| |
@@ -115,13 +118,14 @@ This project is a RESTful API for a Tic-Tac-Toe game, built using Flask and SQLA
    O|X|O
    The match is a draw!
    ```
+  And more.
 
 ### Check Status
 
 - Endpoint: ```/status```
 - Method: ```GET```
 - Description: Gets status of the match.
-- Params: ```matchId``` must be sent in the request. ```http://localhost:5001/status?matchId=<match_id>``` 
+- Params: ```matchId``` must be sent in the request. ```http://localhost:5000/status?matchId=<match_id>``` 
 - Response Example:
 ```json
 {
