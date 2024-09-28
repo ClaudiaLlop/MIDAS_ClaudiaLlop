@@ -29,6 +29,20 @@ class TestMatchEndpoints(unittest.TestCase):
         self.assertIn('matchId', data)
         self.assertIsInstance(data['matchId'], int)
 
+    def test_status_endpoint(self):
+        """Test the /status endpoint."""
+        response = self.client.post('/create')
+        match_id = json.loads(response.data)['matchId']
+
+        response = self.client.get(f'/status?matchId={match_id}')
+        data = json.loads(response.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('board', data)
+        self.assertIn('current_turn', data)
+        self.assertEqual(data['current_turn'], 'X')
+        self.assertIsNone(data['winner'])
+
     def test_make_move(self):
         """Test the /move endpoint with valid data."""
         # Create a match
@@ -99,6 +113,83 @@ class TestMatchEndpoints(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 400)
         self.assertIn('It is player O turn.', response.data.decode())
+
+    def test_draw(self):
+        """Test a draw situation in the match."""
+        response = self.client.post('/create')
+        match_id = json.loads(response.data)['matchId']
+
+        # Fill the board without winner
+        moves = [
+            ('X', 1, 1), ('O', 1, 2), ('X', 2, 2), ('O', 1, 3),
+            ('X', 2, 3), ('O', 2, 1), ('X', 3, 1), ('O', 3, 3), ('X', 3, 2)
+        ]
+
+        for player, x, y in moves:
+            self.client.post('/move', json={
+                'matchId': match_id,
+                'playerId': player,
+                'square': {'x': x, 'y': y}
+            })
+
+        # Verify draw
+        response = self.client.post('/move', json={
+            'matchId': match_id,
+            'playerId': 'X',
+            'square': {'x': 1, 'y': 1}
+        })
+
+        self.assertIn('Match finished. It is a draw.', response.data.decode())
+
+    def test_create_multiple_matches(self):
+        """Test creating multiple matches to ensure matchId increments correctly."""
+        response1 = self.client.post('/create')
+        match_id_1 = json.loads(response1.data)['matchId']
+
+        response2 = self.client.post('/create')
+        match_id_2 = json.loads(response2.data)['matchId']
+
+        self.assertGreater(match_id_2, match_id_1)
+
+    def test_move_after_winner(self):
+        """Test no further moves are allowed after the game is won."""
+        response = self.client.post('/create')
+        match_id = json.loads(response.data)['matchId']
+
+        # X is the winner
+        moves = [
+            ('X', 1, 1), ('O', 1, 2),
+            ('X', 2, 1), ('O', 1, 3),
+            ('X', 3, 1)
+        ]
+
+        for player, x, y in moves:
+            self.client.post('/move', json={
+                'matchId': match_id,
+                'playerId': player,
+                'square': {'x': x, 'y': y}
+            })
+
+        # Try to move after X winning
+        response = self.client.post('/move', json={
+            'matchId': match_id,
+            'playerId': 'O',
+            'square': {'x': 2, 'y': 2}
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Player X is the winner', response.data.decode())
+
+    def test_move_with_invalid_match_id(self):
+        """Test making a move with a non-existent matchId."""
+        response = self.client.post('/move', json={
+            'matchId': 9999,
+            'playerId': 'X',
+            'square': {'x': 1, 'y': 1}
+        })
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn('MatchId not found.', response.data.decode())
 
 
 if __name__ == '__main__':
