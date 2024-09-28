@@ -11,4 +11,4 @@ if __name__ == '__main__':
         db.create_all()
         logger.info("Tables created (if they didn't exist).")
     logger.info("Service started")
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
