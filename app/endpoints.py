@@ -46,27 +46,29 @@ def draw_board(board):
 
 @routes.route('/create', methods=['POST'])
 def create_match():
-    """
-    Endpoint for match initialization.
-
-    Returns:
-        dict containing the matchId created
-    """
-    max_match = db.session.query(db.func.max(Match.id)).scalar()
-
-    if max_match is None:
-        match_id = 0
-    else:
-        match_id = max_match + 1
-
-    new_match = Match(id=match_id)
-
     logger = logging.getLogger(__name__)
-    logger.info(f"Match created successfully with ID: {match_id}")
 
-    db.session.add(new_match)
-    db.session.commit()
-    return json.dumps({'matchId': new_match.id}), 200
+    try:
+        max_match = db.session.query(db.func.max(Match.id)).scalar()
+
+        if max_match is None:
+            match_id = 0
+        else:
+            match_id = max_match + 1
+
+        new_match = Match(id=match_id)
+
+        logger.info(f"Creating match with ID: {match_id}")
+
+        db.session.add(new_match)
+        db.session.commit()
+
+        logger.info(f"Match created successfully with ID: {match_id}")
+        return json.dumps({'matchId': new_match.id}), 200
+
+    except Exception as e:
+        logger.error(f"Error creating match: {e}")
+        return json.dumps({'error': 'Internal server error'}), 500
 
 
 @routes.route('/move', methods=['POST'])
