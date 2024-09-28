@@ -1,10 +1,33 @@
-import random
 import logging
 import json
 from flask import Blueprint, request
 from .match import db, Match
 
 routes = Blueprint('routes', __name__)
+
+
+def check_data(data: dict):
+    """
+    Checks structure of data dict.
+
+    Args:
+        data (dict)
+
+    Returns:
+        error if the data is invalid
+    """
+
+    if not isinstance(data, dict):
+        return json.dumps({'error': "Data must be a dict."}), 400
+
+    required_keys = {"matchId", "playerId", "square"}
+    if not required_keys.issubset(data.keys()):
+        return json.dumps({'error': "Data dict must contain keys {matchId, playerId, square}"}), 400
+
+    if not isinstance(data["square"], dict):
+        return json.dumps({'error': "'square' key must be a dict."}), 400
+    if not {"x", "y"} <= set(data["square"].keys()):
+        return json.dumps({'error': "'square' dict must contain keys {x, y}"}), 400
 
 
 def draw_board(board):
@@ -29,7 +52,13 @@ def create_match():
     Returns:
         dict containing the matchId created
     """
-    match_id = random.randint(0, 100000)
+    max_match = db.session.query(db.func.max(Match.id)).scalar()
+
+    if max_match is None:
+        match_id = 0
+    else:
+        match_id = max_match + 1
+
     new_match = Match(id=match_id)
 
     logger = logging.getLogger(__name__)
@@ -49,12 +78,16 @@ def make_move():
         string
     """
     data = request.get_json()
+    check_data(data)
     match_id = data.get('matchId')
     player = data.get('playerId')
     x = data['square']['x']
     y = data['square']['y']
 
-    if not isinstance(x, int) or not isinstance(y, int) or  (x not in [1, 2, 3]) or (y not in [1, 2, 3]):
+    if player not in ("X", "O"):
+        return json.dumps({'error': "Player must be 'X' or 'O'"}), 400
+
+    if not isinstance(x, int) or not isinstance(y, int) or (x not in [1, 2, 3]) or (y not in [1, 2, 3]):
         return json.dumps({'error': "x and y coordinates must be integers from 1 to 3."}), 400
 
     # Calculate index on 3x3 board
@@ -66,18 +99,17 @@ def make_move():
     if not match:
         return json.dumps({'error': 'MatchId not found.'}), 404
 
-    # Check if there is already a winner
+    # Check if there is already a winner or draw
     if match.winner:
-        if match.winner == "draw":
-            return json.dumps({'message': f'Match finished. It is a draw.'}), 400
-        else:
-            return json.dumps({'message': f'Match finished. Player {match.winner} is the winner.'}), 400
+        return json.dumps({'message': f'Match finished. Player {match.winner} is the winner.'}), 400
+    if all(char != ' ' for char in match.board) and not match.winner:
+        return json.dumps({'message': f'Match finished. It is a draw.'}), 400
 
     # Validate movement
-    if match.board[index] != ' ':
-        return json.dumps({'error': 'The space is already occupied.'}), 400
     if match.current_turn != player:
         return json.dumps({'error': f'It is player {match.current_turn} turn.'}), 400
+    if match.board[index] != ' ':
+        return json.dumps({'error': 'The space is already occupied.'}), 400
 
     # Register movement
     board_list = list(match.board)
